@@ -13,14 +13,17 @@ parser.add_argument('--command', type=str, default='')
 parser.add_argument('--model', type=str, default='resnet50_v1')
 parser.add_argument('--data-dir', type=str, default=os.path.expanduser('~/distributed_training/datasets/imagenet/imagenet_pass_through'))
 parser.add_argument('--epochs', type=int, default=90)
+parser.add_argument('--warmup-epochs', type=int, default=5)
 parser.add_argument('--data-nthreads', type=int, default=2)
 parser.add_argument('--batch-size', type=int, default=128)
 parser.add_argument('--lr', type=float, default=0.1)
-parser.add_argument('--lr-mode', type=str, default='step')
+parser.add_argument('--lr-mode', type=str, default='cosine')
 parser.add_argument('--mode', type=str, default='module',
                      help='module or gluon')
 parser.add_argument('--epochs-per-update', type=int, default=3,
                     help='number of epoche during one elastic update period')
+parser.add_argument('--fix-global-batch-size', type=int, default=-1,
+                    help='fix the global batch size')
 
 def parse_config(filename):
     schedule = {}
@@ -82,9 +85,11 @@ def elastic():
         prog = prog + ' --batch-size=' + str(args.batch_size)
         prog = prog + ' --lr=' + str(args.lr)
         prog = prog + ' --lr-mode=' + args.lr_mode
+        prog = prog + ' --warmup-epochs=' + str(args.warmup_epochs)
         prog = prog + ' --mode=' + args.mode
 
         prog = prog + ' --begin-epoch=' + str(epoch)
+        prog = prog + ' --fix-global-batch-size=' + str(args.fix_global_batch_size)
         prog = prog + ' --epochs-per-update=' + str(args.epochs_per_update)
         prog = prog + ' --eval-epoch'
         prog = prog + ' --no-cuda'

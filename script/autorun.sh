@@ -10,4 +10,8 @@ echo "PYTHONPATH=$PYTHONPATH"
 echo "PATH=$PATH"
 echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
-python elastic.py --model resnet50_v1 --command "python resnet50_imagenet.py"
+# linear scaling
+# python elastic_launcher.py --model resnet50_v1 --command "python resnet50_imagenet.py"
+
+# fix the global batch size, as well as learning rate
+python elastic_launcher.py --model resnet50_v1 --fix-global-batch-size 2048 --lr 1.6  --command "python resnet50_imagenet.py"

@@ -91,7 +91,8 @@ parser.add_argument('--save-frequency', type=int, default=1,
                     help='frequency of model saving (default: 0)')
 parser.add_argument('--load-epoch', type=int, default=0)
 
-
+parser.add_argument('--fix-global-batch-size', type=int, default=-1,
+                    help='fix the global batch size')
 parser.add_argument('--begin-epoch', type=int, default=0,
                     help='starting epoch for training (default: 0)')
 parser.add_argument('--epochs-per-update', type=int, required=True,
@@ -102,8 +103,6 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 logging.info(args)
-print(mx)
-print(hvd)
 
 # Horovod: initialize Horovod
 hvd.init()
@@ -113,9 +112,17 @@ local_rank = hvd.local_rank()
 
 num_classes = 1000
 num_training_samples = 1281167
-batch_size = args.batch_size
+
+if args.fix_global_batch_size != -1:
+    batch_size = args.fix_global_batch_size // num_workers
+    logging.info("Setting batch size per instance to %d, as well as the global learning rate is set to %f ." % (batch_size, args.lr))
+    # make sure the global learning rate is unchanged
+    args.lr /= num_workers
+else:
+    batch_size = args.batch_size
+
 epoch_size = \
-    int(math.ceil(int(num_training_samples // num_workers) / batch_size))
+        int(math.ceil(int(num_training_samples // num_workers) / batch_size))
 
 if args.lr_mode == 'step':
     lr_decay_epoch = [int(i) for i in args.lr_decay_epoch.split(',')]
